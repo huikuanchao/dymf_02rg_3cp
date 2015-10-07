@@ -10,7 +10,7 @@ void read_input( void ) {
 
   inp = fopen( "dyft.input" , "r" ) ;
 
-  fscanf(int , "%d", &Nsp)
+  fscanf(inp , "%d", &Nsp);
   fgets( tt, 80, inp);
   fscanf( inp , "%d %d" , &Nda , &Ndb ) ;
   fgets( tt , 80 , inp ) ;
@@ -54,14 +54,13 @@ void read_input( void ) {
   fscanf( inp , "%lf" , &C ) ;
   fgets( tt , 80 , inp ) ;
 
-  fscanf( inp , "%lf" , &chiAB, &chiAC, &chiBC ) ;
+  fscanf( inp , "%lf %lf %lf" , &chiAB, &chiAC, &chiBC ) ;
   fgets( tt , 80 , inp ) ;
-
+  cout<<"chiAB "<<chiAB<<" chiAC "<<chiAC<<" chiBC "<<chiBC<<endl;
   fscanf( inp , "%lf %lf" , &kappa ,&kappa_p) ;
   fgets( tt , 80 , inp ) ;
    cout<<"kappa "<<kappa<<" "<<kappa_p<<endl;
-  Diff = ( double* ) calloc( 3 , sizeof( double ) ) ;
-  fscanf( inp , " %lf %lf %lf %lf" , &Diff[0] , &Diff[1], &Diff[3] ,&Diff[2],&Diff_rot ) ;
+  fscanf( inp , " %lf %lf %lf %lf %lf" , &Diff[0] , &Diff[1], &Diff[3] ,&Diff[2],&Diff_rot ) ;
   fgets( tt , 80 , inp ) ;
 
 
@@ -112,13 +111,22 @@ void read_input( void ) {
     printf("Lfren %d and Laver %d ",L_fren, L_aver);
     fgets( tt , 80 , inp ) ;
     fscanf( inp , "%lf " , &lam_L ) ;
-    printf("lam_L %f",lam_L);
+    printf("lam_L %f\n",lam_L);
  
 
 	
   }
+  else{
+    fgets( tt , 80 , inp ) 	;	
+    fgets( tt , 80 , inp )      ;
+    fgets( tt , 80 , inp )      ;
+  }
+  fgets( tt , 80 , inp )      ;
+  fgets( tt , 80 , inp )  ;
 
+ 
+  fscanf( inp , "%d %lf %lf %lf %lf " , &wall_para,&wall_lamb[0],&wall_lamb[1],&wall_lamb[2],&wall_lamb[3]) ;
+  fgets( tt , 80 , inp ) ;
+  fscanf( inp , "%lf " , &wall_thick ) ;
   fclose( inp ) ;
-
-
 }

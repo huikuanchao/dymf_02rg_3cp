@@ -17,10 +17,9 @@ void charge_grid( ) {
 
 #pragma omp parallel for
   for ( i=0 ; i<M ; i++ ) {
-    rhoda[i] = rhoha[i] = rhodb[i] = rhohb[i] = rhop[i] = smrhop[i] = rhoga[i] = 0.0 ;
+    rhohc[i] = rhoda[i] = rhoha[i] = rhodb[i] = rhohb[i] = rhop[i] = smrhop[i] = rhoga[i] = 0.0 ;
     for ( j=0 ; j<nthreads ; j++ ) 
-      rhoda_t[j][i] = rhoha_t[j][i] = rhodb_t[j][i] = rhohb_t[j][i] 
-        = rhoga_t[j][i] = rhop_t[j][i] = 0.0 ;
+      rhohc_t[j][i] = rhoda_t[j][i] = rhoha_t[j][i] = rhodb_t[j][i] = rhohb_t[j][i]  = rhoga_t[j][i] = rhop_t[j][i] = 0.0 ;
   }
 
   ////////////////////////////////////////////////////
@@ -39,15 +38,17 @@ void charge_grid( ) {
       rhodb[i] += rhodb_t[j][i] ;
       rhoha[i] += rhoha_t[j][i] ;
       rhohb[i] += rhohb_t[j][i] ;
+      rhohc[i] += rhohc_t[j][i] ;
       rhop[i] += rhop_t[j][i] ;
       rhoga[i] += rhoga_t[j][i] ;
     }
 
-    rhot[i] = rhoda[i] + rhodb[i] + rhoha[i] + rhohb[i]  + rhoga[i];
+    rhot[i] = rhohc[i]+rhoda[i] + rhodb[i] + rhoha[i] + rhohb[i]  + rhoga[i];
 
     rho[0][i] = rhoda[i] + rhoha[i] + rhoga[i] ;
     rho[1][i] = rhodb[i] + rhohb[i] ;
     rho[2][i] = rhop[i] ;
+    rho[3][i] = rhohc[i] ;
   }
 
 }
@@ -174,7 +175,9 @@ void add_segment( int id ) {
             rhop_t[tid][ Mindex ] += W3 / CG_ratio ;
           else if ( tp[id] == 0 )
             rhoga_t[tid][ Mindex ] += W3 / CG_ratio ;
-          else {
+          else if ( tp[id] == 3  )
+	    rhohc_t[tid][ Mindex ] += W3 / CG_ratio ;
+	  else {
             char nm[40] ;
             sprintf(nm, "Invalid partic type. tp[%d] = %d\n" , id, tp[id] ) ;
             die(nm);

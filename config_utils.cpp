@@ -614,6 +614,28 @@ void write_gro() {
     }
     resind++ ;
   }
+  
+  for ( k=0 ; k<nC ; k++ ) {
+    for ( m=0 ; m<Nhc ; m++ ) {
+      fprintf( otp , "%5d" , resind % 100000 + 1 ) ;
+      fprintf( otp , "%-5s" , "HC" ) ;
+      fprintf( otp , "%5s" , xc[ind] ) ;
+     
+      fprintf( otp , "%5d" , ind % 100000 + 1 ) ;
+      
+      for ( j=0 ; j<Dim ; j++ )
+        fprintf( otp , "%8.3lf" , x[ind][j] / 10.0 ) ;
+      
+      for ( j=Dim ; j<3 ; j++ )
+        fprintf( otp , "%8.3lf" , 0.0 );
+      
+      fprintf( otp , "\n" ) ;
+
+      ind++;
+    }
+    resind++ ;
+  }
+
 
   for ( k=0 ; k<nP ; k++ ) {
     fprintf( otp , "%5d" , resind % 100000 + 1 ) ;
@@ -749,6 +771,33 @@ void random_config( void ) {
     
     }
   }
+  // Random C homopolymers //
+  for ( k=0 ; k<nC ; k++ ) {
+    for ( j=0 ; j<Dim ; j++ ) 
+      x[ind][j] = ran2() * L[j] ;
+    
+    tp[ ind ] = 3 ;
+
+    ind += 1 ;
+ 
+    for ( m=1 ; m<Nhc ; m++ ) {
+    
+      for ( j=0 ; j<Dim ; j++ ) {
+        x[ind][j] = x[ ind-1 ][ j ] + gasdev2() ;
+
+        if ( x[ind][j] > L[j] )
+          x[ind][j] -= L[j] ;
+        else if ( x[ind][j] < 0.0 )
+          x[ind][j] += L[j] ;
+      }
+
+      tp[ ind ] = 1 ;
+
+      ind++ ;
+    
+    }
+  }
+
 
   // Random particle centers, graft locations //
   for ( k=0 ; k<nP ; k++ ) {
@@ -1055,7 +1104,7 @@ void cyl_config( void ) {
 
 	x[ind][0] = center_crd[0];
 	x[ind][1] = center_crd[1];
-	x[ind][2] = ran2()*L[2];
+	x[ind][2] = ran2()*(L[2]-2*wall_thick)*nsD/nstot + wall_thick;
     
         tmp_vct[1] = ran2()*2*PI;
 	tmp_vct[0] = cos(tmp_vct[1]);
@@ -1079,8 +1128,7 @@ void cyl_config( void ) {
     else{
 	x[ind][0] = 0;
 	x[ind][1] = 0;
-	x[ind][2] = ran2()*L[2];
-    
+        x[ind][2] = ran2()*(L[2]-2*wall_thick)*nsD/nstot + wall_thick; 
         tmp_vct[1] = ran2()*2*PI;
 	tmp_vct[0] = cos(tmp_vct[1]);
 	tmp_vct[1] = sin(tmp_vct[1]);
@@ -1111,7 +1159,93 @@ void cyl_config( void ) {
 
 
   }//nD
+  
   // Random A homopolymers //
+  for ( k=0 ; k<nA ; k++ ) {
+    for ( j=0 ; j<Dim ; j++ ) 
+      x[ind][j] = ran2() * L[j] ;
+    
+    tp[ ind ] = 0 ;
+
+    ind += 1 ;
+ 
+    for ( m=1 ; m<Nha ; m++ ) {
+    
+      for ( j=0 ; j<Dim ; j++ ) {
+        x[ind][j] = x[ ind-1 ][ j ] + gasdev2() ;
+
+        if ( x[ind][j] > L[j] )
+          x[ind][j] -= L[j] ;
+        else if ( x[ind][j] < 0.0 )
+          x[ind][j] += L[j] ;
+      }
+
+      tp[ ind ] = 0 ;
+
+      ind++ ;
+    
+    }
+  }
+
+  // Random B homopolymers //
+  for ( k=0 ; k<nB ; k++ ) {
+    for ( j=0 ; j<Dim ; j++ ) 
+      x[ind][j] = ran2() * L[j] ;
+    
+    tp[ ind ] = 1 ;
+
+    ind += 1 ;
+ 
+    for ( m=1 ; m<Nhb ; m++ ) {
+    
+      for ( j=0 ; j<Dim ; j++ ) {
+        x[ind][j] = x[ ind-1 ][ j ] + gasdev2() ;
+
+        if ( x[ind][j] > L[j] )
+          x[ind][j] -= L[j] ;
+        else if ( x[ind][j] < 0.0 )
+          x[ind][j] += L[j] ;
+      }
+
+      tp[ ind ] = 1 ;
+
+      ind++ ;
+    
+    }
+  }
+
+  // Random C homopolymers //
+  for ( k=0 ; k<nC ; k++ ) {
+    for ( j=0 ; j<(Dim-1) ; j++ ) 
+      x[ind][j] = ran2() * L[j] ;
+   
+    tmp_r =  -ran2()*(L[2]-2*wall_thick)*nsC/nstot +L[2] -  wall_thick;
+    x[ind][2]  = tmp_r ;
+    tp[ ind ] = 3 ;
+
+    ind += 1 ;
+ 
+    for ( m=1 ; m<Nhc ; m++ ) {
+    
+      for ( j=0 ; j<Dim-1 ; j++ ) {
+        x[ind][j] = x[ ind-1 ][ j ] + gasdev2() ;
+        x[ind][2]  = tmp_r ;
+
+        if ( x[ind][j] > L[j] )
+          x[ind][j] -= L[j] ;
+        else if ( x[ind][j] < 0.0 )
+          x[ind][j] += L[j] ;
+      }
+
+      tp[ ind ] = 3 ;
+
+      ind++ ;
+    
+    }
+  }//nC
+
+
+  //  Random NPs //
   for ( k=0 ; k<nP ; k++ ) {
     int center_ind , tmp_flg ,gind,prev_graft ;
     double u[Dim] ;

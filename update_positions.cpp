@@ -86,7 +86,7 @@ void update_positions_init() {
       if ( x[i][j] >= L[j] )
         x[i][j] -= L[j] ;
       
-      else if ( x[i][j] < 0.0 )
+      else  if ( x[i][j] < 0.0 )
         x[i][j] += L[j] ;
     }
 

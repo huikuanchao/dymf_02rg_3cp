@@ -21,7 +21,7 @@ void forces() {
 #pragma omp parallel for private(j)
   for ( i=0 ; i<M ; i++ )
     for ( j=0 ; j<Dim ; j++ ) 
-      gradwA[j][i] = gradwB[j][i] = gradwP[j][i] = 0.0 ;
+      gradwC[j][i] = gradwA[j][i] = gradwB[j][i] = gradwP[j][i] = 0.0 ;
 
 
 
@@ -60,6 +60,74 @@ void forces() {
         gradwA[j][i] += tmp[i] * chiAB / rho0 ;
     }
   }
+  
+   if ( chiAC != 0.0 ) {
+    // A acting on C //
+    fftw_fwd( rho[0] , ktmp ) ;
+ 
+    for ( j=0 ; j<Dim ; j++ ) {
+#pragma omp parallel for
+      for ( i=0 ; i<M ; i++ )
+        ktmp2[i] = grad_uG_hat[j][i] * ktmp[i] ;
+ 
+      fftw_back( ktmp2 , tmp ) ;
+ 
+#pragma omp parallel for
+      for ( i=0 ; i<M ; i++ )
+        gradwC[j][i] += tmp[i] * chiAC / rho0 ;
+    }
+ 
+ 
+    // C acting on A //
+    fftw_fwd( rho[3] , ktmp ) ;
+    
+    for ( j=0 ; j<Dim ; j++ ) {
+#pragma omp parallel for
+      for ( i=0 ; i<M ; i++ )
+        ktmp2[i] = grad_uG_hat[j][i] * ktmp[i] ;
+ 
+      fftw_back( ktmp2 , tmp ) ;
+ 
+#pragma omp parallel for
+      for ( i=0 ; i<M ; i++ )
+        gradwA[j][i] += tmp[i] * chiAC / rho0 ;
+    }
+  }
+  
+   if ( chiBC != 0.0 ) {
+    // B acting on C //
+    fftw_fwd( rho[1] , ktmp ) ;
+ 
+    for ( j=0 ; j<Dim ; j++ ) {
+#pragma omp parallel for
+      for ( i=0 ; i<M ; i++ )
+        ktmp2[i] = grad_uG_hat[j][i] * ktmp[i] ;
+ 
+      fftw_back( ktmp2 , tmp ) ;
+ 
+#pragma omp parallel for
+      for ( i=0 ; i<M ; i++ )
+        gradwC[j][i] += tmp[i] * chiBC / rho0 ;
+    }
+ 
+ 
+    // C acting on B //
+    fftw_fwd( rho[3] , ktmp ) ;
+    
+    for ( j=0 ; j<Dim ; j++ ) {
+#pragma omp parallel for
+      for ( i=0 ; i<M ; i++ )
+        ktmp2[i] = grad_uG_hat[j][i] * ktmp[i] ;
+ 
+      fftw_back( ktmp2 , tmp ) ;
+ 
+#pragma omp parallel for
+      for ( i=0 ; i<M ; i++ )
+        gradwB[j][i] += tmp[i] * chiBC / rho0 ;
+    }
+  }
+  
+  
 
 
   // Compressibility contribution //
@@ -80,6 +148,7 @@ void forces() {
     for ( i=0 ; i<M ; i++ ) {
       gradwA[j][i] += tmp[i] * kappa / rho0 ;
       gradwB[j][i] += tmp[i] * kappa / rho0 ;
+      gradwC[j][i] += tmp[i] * kappa / rho0 ;
     }
 
   }
@@ -119,6 +188,7 @@ void forces() {
       for ( i=0 ; i<M ; i++ ) {
         gradwA[j][i] += tmp[i] * kappa / rho0 ;
         gradwB[j][i] += tmp[i] * ( kappa + ( A_partics ? chiAB : 0.0 ) ) / rho0 ;
+        gradwC[j][i] += tmp[i] * ( kappa + ( A_partics ? chiAB : 0.0 ) ) / rho0 ;
       }
     }
 
@@ -153,6 +223,22 @@ void forces() {
         gradwP[j][i] += tmp[i] * ( kappa + ( A_partics ? chiAB : 0.0 ) ) / rho0 ;
 
     }
+    // C Monomers acting on particles //
+    fftw_fwd( rho[3] , ktmp ) ;
+    for ( j=0 ; j<Dim ; j++) {
+
+#pragma omp parallel for
+      for ( i=0 ; i<M ; i++ )
+        ktmp2[i] = grad_uPG_hat[j][i] * ktmp[i] ;
+
+      fftw_back( ktmp2 , tmp ) ;
+
+#pragma omp parallel for
+      for ( i=0 ; i<M ; i++ )
+        gradwP[j][i] += tmp[i] * ( kappa + ( A_partics ? chiAB : 0.0 ) ) / rho0 ;
+
+    }
+
 
 
   }// if ( nP > 0 )
@@ -176,6 +262,8 @@ void forces() {
           f[i][j] -= gradwB[ j ][ gind ] * grid_W[i][m] ;
         else if ( tp[i] == 2 )
           f[i][j] -= gradwP[ j ][ gind ] * grid_W[i][m] ;
+      	else if (  tp[i] ==3 )
+	  f[i][j] -= gradwC[ j ][ gind ] * grid_W[i][m] ;
       }
     }
 
@@ -188,5 +276,5 @@ void forces() {
   // Call the bonded forces //
   ////////////////////////////
   bonds() ;
-
+  wallf();
 }

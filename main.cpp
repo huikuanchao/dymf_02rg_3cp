@@ -55,7 +55,9 @@ int main( int argc , char** argv ) {
    
 
     forces() ;
-   
+  
+    //cout<<"here"<<endl;
+
     if(sigma>0){
        torque();
     }

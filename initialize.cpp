@@ -13,10 +13,13 @@ void initialize() {
   idum =   -long( time(0) ) ; // 9 ; //
 
   read_input() ;
-  
-  if ( phiP + phiHA + phiHB > 1.0 )
+
+  if ( phiP + phiHA + phiHB + phiHC> 1.0 )
     die("Invalid volume fractions!\n") ;
 
+   
+  for(i =0 ; i<4 ; i++)
+    wall_lamb[i] *= kappa;
   lagrange_weights = 0 ;
   spline_weights = 1 ;
 
@@ -36,7 +39,9 @@ void initialize() {
   gvol = V / double( M ) ;
 
   // This is used for density fields //
-  ntypes = 3 ;
+  ntypes = Nsp+1 ;
+  
+  cout<<"ntypes "<<ntypes<<endl;
 
   Rg = sqrt( double( Nda + Ndb ) / 6.0 ) ;
   Rg3 = Rg * Rg * Rg ;
@@ -45,15 +50,22 @@ void initialize() {
   Range2 = Range *Range;
   rho0 = C * double( Nda + Ndb ) / Rg3 ;
   chiAB = chiAB / double( Nda + Ndb ) ;
+  chiAC = chiAC / double( Nda + Ndb ) ;
+  chiBC = chiBC / double( Nda + Ndb ) ;
+  
   kappa = kappa / double( Nda + Ndb ) ;
   kappa_p = kappa_p / double( Nda + Ndb ) ;
-  cout<<"kN "<<kappa*( Nda + Ndb )<<" chiN "<<( Nda + Ndb )*chiAB<<endl;
+  cout<<"kN "<<kappa*( Nda + Ndb )<<" chiABN "<<( Nda + Ndb )*chiAB<<endl;
+  
+ double  rdc_V = V * (L[2]-wall_thick*2)/L[2];
 
-  nD = int( ( 1.0 - phiHA - phiHB - phiP ) * rho0 * V / ( Nda + Ndb ) * CG_ratio ) ;
-  nA = int( phiHA * rho0 * V / Nha * CG_ratio ) ;
-  nB = int( phiHB * rho0 * V / Nhb * CG_ratio ) ;
+  nD = int( ( 1.0 - phiHA - phiHB - phiP -phiHC) * rho0 * rdc_V / ( Nda + Ndb ) * CG_ratio ) ;
+  nA = int( phiHA * rho0 * rdc_V / Nha * CG_ratio ) ;
+  nB = int( phiHB * rho0 * rdc_V / Nhb * CG_ratio ) ;
+  nC = int( phiHC * rho0 * rdc_V / Nhc * CG_ratio ) ; 
 
   Vp = rho0 ;
+
   if ( Dim == 2 )
     Vp *= PI * Rp * Rp ;
   else if ( Dim == 3 )
@@ -84,7 +96,7 @@ void initialize() {
     else
       ng_per_partic = 0 ;
 
-    nP = int( phiP * rho0 * V /(Vp+ Ng * ng_per_partic * CG_ratio )) ;
+    nP = int( phiP * rho0 * rdc_V /(Vp+ Ng * ng_per_partic * CG_ratio )) ;
     //nP = int( phiP * rho0 * V /(Vp));
 
     printf("nP = %d particles with %d grafted chains per particle\n" , 
@@ -100,16 +112,18 @@ void initialize() {
   nsD = nD * (Nda + Ndb) ;
   nsA = nA * Nha ;
   nsB = nB * Nhb ;
+  nsC = nC * Nhc ; 
   nsP = nP * ( 1 + ng_per_partic * ( Ng + 1 ) ) ; // + 1 because of the graft site
 
   printf("Input rho0: %lf , " , rho0 ) ;
-  rho0 = ( nD * (Nda + Ndb ) + nA * Nha + nB * Nhb + nP * (Vp + ng_per_partic * Ng ) ) / V / CG_ratio ;
+ 
+  rho0 = ( nD * (Nda + Ndb ) + nA * Nha + nB * Nhb + nC*Nhc+nP * (Vp + ng_per_partic * Ng ) ) / rdc_V / CG_ratio ;
   printf("actual rho0: %lf\n" , rho0 ) ;
 
-  printf("\nnD: %d\nnA: %d\nnB: %d\nnP: %d\n\n" , nD, nA, nB, nP ) ;
+  printf("\nnD: %d\nnA: %d\nnB: %d\nnC: %d\nnP: %d\n\n" , nD, nA, nB, nC, nP ) ;
 
   // Derived quantities //
-  nstot = nA * Nha + nB * Nhb + nD * ( Nda + Ndb ) 
+  nstot = nA * Nha + nB * Nhb + nD * ( Nda + Ndb ) + nC*Nhc 
     + nP * ( 1 + ng_per_partic * ( Ng + 1 ) ) ;
  
   step = 0 ;
@@ -215,7 +229,7 @@ void adj_L(){
    
      tmp_prss /= (Dim-1);
 
-     L[Dim-1] += lam_L*(aver_Ptens[Dim-1][Dim-1] - tmp_prss); 
+  /*   L[Dim-1] += lam_L*(aver_Ptens[Dim-1][Dim-1] - tmp_prss); 
 
      L[1] = pow(V/L[Dim-1]/sqrt(3),0.5);
      L[0] = L[1]*sqrt(3); 
@@ -229,11 +243,11 @@ void adj_L(){
      }
 
 
-
+*/
 
   }//optm_l=2
 
-
+/*
 #pragma omp parallel for
   for(i =0 ;i<nstot ; i++){
     for(int m=0;m<Dim ;m++){
@@ -244,7 +258,7 @@ void adj_L(){
     }
 
   }
-
+*/
    for(i=0;i<Dim ;i++){
 	aver_Ptens[i][i]  = 0;///= aver_Ptens[0][1];
 
@@ -281,7 +295,7 @@ void initialize_potential( ) {
 
     tmp[i] = rho0 / 2.0 * ( 1.0 - erf( ( mdr - Rp ) / Xi ) ) * V;
     gammaP[i] = tmp[i] ;
-
+    
   }
 
   // Set up the particle-particle potential //
@@ -353,6 +367,7 @@ void initialize_potential( ) {
 void allocate( ) {
 
   int i, j,k;
+
 
   for(i = 0 ;i<Dim ; i++)
     for(j = 0; j <Dim ; j++)
@@ -490,6 +505,7 @@ sizeof(complex<double>*));
   
   mem_use += 3 * Dim * M * sizeof( double ) ; 
   
+  k_wall = ( complex<double>* ) calloc( M , sizeof( complex<double> ) ) ;
   ktmp = ( complex<double>* ) calloc( M , sizeof( complex<double> ) ) ;
   tmp_PP = ( double* ) calloc( M , sizeof( double ) ) ;
   tmp_Ng =  (complex<double>* ) calloc( M , sizeof( complex<double> ) ) ;
@@ -562,9 +578,12 @@ sizeof(complex<double>*));
   rhoga = ( double* ) calloc( M , sizeof( double ) ) ;
   rhoha = ( double* ) calloc( M , sizeof( double ) ) ;
   rhohb = ( double* ) calloc( M , sizeof( double ) ) ;
+  rhohc = ( double* ) calloc( M , sizeof( double ) ) ;
   rhoda = ( double* ) calloc( M , sizeof( double ) ) ;
   rhodb = ( double* ) calloc( M , sizeof( double ) ) ;
   rhop = ( double* ) calloc( M , sizeof( double ) ) ;
+  rhow =  ( double* ) calloc( M , sizeof( double ) ) ;
+
   gammaP = ( double* ) calloc( M , sizeof( double ) ) ;
   smrhop = ( double* ) calloc( M , sizeof( double ) ) ;
 
@@ -573,6 +592,7 @@ sizeof(complex<double>*));
   rhoga_t = ( double** ) calloc( nthreads , sizeof( double* ) ) ;
   rhoha_t = ( double** ) calloc( nthreads , sizeof( double* ) ) ;
   rhohb_t = ( double** ) calloc( nthreads , sizeof( double* ) ) ;
+  rhohc_t = ( double** ) calloc( nthreads , sizeof( double* ) ) ;
   rhoda_t = ( double** ) calloc( nthreads , sizeof( double* ) ) ;
   rhodb_t = ( double** ) calloc( nthreads , sizeof( double* ) ) ;
   rhop_t =  ( double** ) calloc( nthreads , sizeof( double* ) ) ;
@@ -581,6 +601,7 @@ sizeof(complex<double>*));
     rhoga_t[i] = ( double* ) calloc( M , sizeof( double ) ) ;
     rhoha_t[i] = ( double* ) calloc( M , sizeof( double ) ) ;
     rhohb_t[i] = ( double* ) calloc( M , sizeof( double ) ) ;
+    rhohc_t[i] = ( double* ) calloc( M , sizeof( double ) ) ;
     rhoda_t[i] = ( double* ) calloc( M , sizeof( double ) ) ;
     rhodb_t[i] = ( double* ) calloc( M , sizeof( double ) ) ;
     rhop_t[i] = ( double* ) calloc( M , sizeof( double ) ) ;
@@ -612,6 +633,7 @@ sizeof(complex<double>*));
     gradwA[j] = ( double* ) calloc( M , sizeof( double ) ) ;
     gradwB[j] = ( double* ) calloc( M , sizeof( double ) ) ;
     gradwP[j] = ( double* ) calloc( M , sizeof( double ) ) ;
+    gradwC[j] = ( double* ) calloc( M , sizeof( double ) ) ;
   }
 
   mem_use += Dim * M * 6 * sizeof( double ) ;

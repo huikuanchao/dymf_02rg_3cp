@@ -13,7 +13,8 @@ void gnp_bonds( ) {
   reduction(+:Ubond)
   for ( i=0 ; i<nP ; i++ ) {
 
-    center_ind = nD * ( Nda + Ndb ) + nA * Nha + nB * Nhb + sites_per_gnp * i ;
+   
+    center_ind = nD * ( Nda + Ndb ) + nC *Nhc +nA * Nha + nB * Nhb + sites_per_gnp * i ;
 
     for ( m=0 ; m<ng_per_partic ; m++ ) {
       ind = center_ind + m * ( Ng + 1 ) + 1 ;
@@ -116,6 +117,29 @@ void bonds( ) {
 
   } // for ( i=0 ; i<nT[k]
 
+  // Homopolymer C bonds //
+#pragma omp parallel for \
+  private(ind, i, j, m, dr, mdr2) \
+  reduction(+:Ubond)
+  for ( i=0 ; i<nC ; i++ ) {
+    for ( m=0 ; m<Nhc - 1 ; m++ ) {
+
+      ind = nD * (Nda + Ndb) + nA * Nha + nB * Nhb + i*Nhc  + m ;
+
+      mdr2 = pbc_mdr2( x[ind] , x[ind+1] , dr ) ;
+
+      Ubond += mdr2 * 1.5 ;
+
+      for ( j=0 ; j<Dim ; j++ ) {
+        f[ind][j] -= 3.0 * dr[j] ;
+        f[ind+1][j] += 3.0 * dr[j] ;
+      }
+
+    }
+
+  } // for ( i=0 ; i<nT[k]
+
+ 
   
   gnp_bonds() ;
 
@@ -196,12 +220,31 @@ void bond_stress() {
 
   } // for ( i=0 ; i<nT[k]
 
+ // Homopolymer C bonds //
+#pragma omp parallel for private(ind,m,dr,mdr2,j1,j2)
+  for ( i=0 ; i<nC ; i++ ) {
+    for ( m=0 ; m<Nhc - 1 ; m++ ) {
+
+      ind = nD * (Nda + Ndb) + nA * Nha + nB*Nhb +i * Nhc + m ;
+
+      mdr2 = pbc_mdr2( x[ind] , x[ind+1] , dr ) ;
+   
+      int tid = omp_get_thread_num() ;
+
+      for ( j1=0 ; j1<Dim ; j1++ )
+        for ( j2=0 ; j2<Dim ; j2++ )
+          Stress_bond_t[j1][j2][tid] +=  dr[j1] * dr[j2] ;
+      
+    }
+
+  } // for ( i=0 ; i<nT[k]
+
 // HomoA gaft chain bons //
   #pragma omp parallel for \
   private( dr,center_ind, m, ind, mdr2, j1,j2, k, prev_graft_site ) 
   for ( i=0 ; i<nP ; i++ ) {
 
-    center_ind = nD * ( Nda + Ndb ) + nA * Nha + nB * Nhb + sites_per_gnp * i ;
+    center_ind = nD * ( Nda + Ndb ) + nA * Nha + nB * Nhb +nC *Nhc+ sites_per_gnp * i ;
 
     for ( m=0 ; m<ng_per_partic ; m++ ) {
       ind = center_ind + m * ( Ng + 1 ) + 1 ;
