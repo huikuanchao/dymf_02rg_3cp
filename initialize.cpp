@@ -12,7 +12,7 @@ void initialize() {
 
   idum =   -long( time(0) ) ; // 9 ; //
 
-  read_input() ;
+//  read_input() ;
 
   if ( phiP + phiHA + phiHB + phiHC> 1.0 )
     die("Invalid volume fractions!\n") ;
@@ -266,7 +266,7 @@ void adj_L(){
    aver_Ptens[0][1] = 0;
 
 
-  initialize_potential( );
+  //initialize_potential( );
 
 
 }
@@ -613,12 +613,14 @@ sizeof(complex<double>*));
    verlet_b = ( double* ) calloc( ntypes , sizeof( double) ) ;
   rho = ( double** ) calloc( ntypes , sizeof( double* ) ) ;
   rho_hat = ( complex<double>** ) calloc( ntypes , sizeof( complex<double>* ) ) ;
+  avg_rho = ( double** ) calloc( ntypes , sizeof( double* ) ) ;
   avg_sk = ( complex<double>** ) calloc( ntypes , sizeof( complex<double>* ) ) ;
   w = ( double** ) calloc( ntypes , sizeof( double* ) ) ;
   for ( i=0 ; i<ntypes ; i++ ) {
     rho_hat[i] = ( complex<double> * ) calloc( M , sizeof( complex<double>) ) ;
     rho[i] = ( double * ) calloc( M , sizeof( double ) ) ;
     avg_sk[i] = ( complex<double> * ) calloc( M , sizeof( complex<double> ) ) ;
+    avg_rho[i] = ( double * ) calloc( M , sizeof( double ) ) ;
     w[i] = ( double* ) calloc( M , sizeof( double ) ) ;
   }
 

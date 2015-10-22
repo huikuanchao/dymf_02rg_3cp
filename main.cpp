@@ -17,12 +17,13 @@ void write_stress( void ) ;
 void bond_stress( void ) ;
 void calc_Unb( void ) ;
 void calc_stress();
+void read_input() ;
 
 int main( int argc , char** argv ) {
 
   int L_flag=0,i,j,k,l;
 
-  if ( argc == 3 && !strcmp( "-nt" , argv[1] ) ) {
+  if ( !strcmp( "-nt" , argv[1] ) ) {
     nthreads = atoi( argv[2] ) ;
     omp_set_num_threads( nthreads ) ;
     printf("\nNumber of threads set to %d!\n" , nthreads ) ;
@@ -34,6 +35,13 @@ int main( int argc , char** argv ) {
   }
 
 
+  read_input() ;
+
+   if(argc == 5 ) {
+     Nhc =  atoi(argv[4]);
+     cout<<"new Nhc "<<Nhc<<endl;
+   }
+  
   initialize() ;
 
   write_gro( ) ;
@@ -119,7 +127,7 @@ int main( int argc , char** argv ) {
 
     
     if ( step > sample_wait && step % sample_freq == 0 ) {
-      fftw_fwd( rho[0] , ktmp ) ;
+     /* fftw_fwd( rho[0] , ktmp ) ;
       for ( i=0 ; i<M ; i++ ) {
         avg_sk[0][i] += ktmp[i] * conj(ktmp[i]) ;
       }
@@ -130,7 +138,14 @@ int main( int argc , char** argv ) {
         for ( i=0 ; i<M ; i++ ) {
           avg_sk[2][i] += ktmp[i] * conj( ktmp[i] ) ;
         }
+      }*/
+      for ( i=0 ; i<M ; i++ ) {
+        avg_rho[0][i] += rho[0][i];
+	avg_rho[1][i] += rho[1][i];
+        avg_rho[3][i] += rho[3][i];
       }
+	
+
 
       num_averages += 1.0 ;
     }
@@ -156,12 +171,14 @@ int main( int argc , char** argv ) {
 
       if ( nB > 0.0 )
         write_grid_data( "rhohb.dat" , rhohb ) ;
+      if(  nC > 0.0 )
+         write_grid_data( "rhohc.dat" , rhohb ) ;
 
       if ( nP > 0.0 ) 
         write_grid_data( "rhop.dat" , rhop ) ;
 
       if ( step > sample_wait ) {
-        for ( i=0 ; i<M ; i++ ) 
+       /* for ( i=0 ; i<M ; i++ ) 
           ktmp2[i] = avg_sk[0][i] / num_averages ;
         write_kspace_data( "avg_sk_A.dat" , ktmp2 ) ;
         
@@ -169,7 +186,21 @@ int main( int argc , char** argv ) {
           for ( i=0 ; i<M ; i++ )
             ktmp2[i] = avg_sk[2][i] / num_averages ;
           write_kspace_data( "avg_sk_np.dat" , ktmp2 ) ;
-        }
+        }*/
+        	
+        for ( i=0 ; i<M ; i++ )
+	     tmp[i] = avg_rho[0][i]/ num_averages ;
+         write_grid_data("avg_typeA.dat",tmp);	
+
+	for ( i=0 ; i<M ; i++ )
+	     tmp[i] = avg_rho[1][i]/ num_averages ;
+         write_grid_data("avg_typeB.dat",tmp);	
+
+        for ( i=0 ; i<M ; i++ )
+	     tmp[i] = avg_rho[3][i]/ num_averages ;
+         write_grid_data("avg_typeC.dat",tmp);	
+
+
       }
 
       calc_Unb() ;

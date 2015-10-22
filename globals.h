@@ -22,7 +22,7 @@ using namespace std ;
 #ifndef MAIN
 extern
 #endif
-double  wall_lamb[4],wall_thick,lam_L,***W_tsn,***vir_func,***vir_funcpp,***vir_funcpg,**q_noise,Diff_rot,*verlet_a,*verlet_b,p_m,**x_bac,**gn_bac,**grf_bf_x, ***epslon,**real_trq,**trq,**euler_ang,***euler_Q,**euler_adot,quantern4,**euler_q,***euler_B,***euler_A,***dAdphi,***dAdtheta,***dAdpsi,**x, **f , *tmp, **grid_W, V, L[Dim], dx[Dim], gvol, Lh[Dim], 
+double  **avg_rho,wall_lamb[4],wall_thick,lam_L,***W_tsn,***vir_func,***vir_funcpp,***vir_funcpg,**q_noise,Diff_rot,*verlet_a,*verlet_b,p_m,**x_bac,**gn_bac,**grf_bf_x, ***epslon,**real_trq,**trq,**euler_ang,***euler_Q,**euler_adot,quantern4,**euler_q,***euler_B,***euler_A,***dAdphi,***dAdtheta,***dAdpsi,**x, **f , *tmp, **grid_W, V, L[Dim], dx[Dim], gvol, Lh[Dim], 
      **rho , **w ,  *r_dudr , *tmp2,*tmp3, 
        Diff[4], delt , chiAC,chiBC,chiAB, kappa_p,kappa, C, rho0 , num_averages , 
         Pscalar,Utt , Ubond , Uchi, Ukappa, aver_Ptens[Dim][Dim],Ptens[Dim][Dim], Pvir , phiHC,phiHA, phiHB,
